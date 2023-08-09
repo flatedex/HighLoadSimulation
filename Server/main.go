@@ -1,17 +1,28 @@
 package main
 
-import(
-	//"fmt"
+import (
+	_ "fmt"
 	"net/http"
 )
 
-type Handler struct {}
+type Message struct {
+	Name string
+	Message string
+}
 
-func (h *Handler) ServeHTTP(writer http.ResponseWriter, request *http.Request){
-	_, err := writer.Write([]byte(http.StatusText(200)))
+func GetDataFromClient(writer http.ResponseWriter, request *http.Request){
+	defer writer.Write([]byte(http.StatusText(200)))
+
+	err := request.ParseForm()
 	if(err != nil) { panic(err) }
-} 
 
-func main(){
-	http.ListenAndServe("127.0.0.1:8069", &Handler{})
+	var message Message
+
+	message.Name = request.FormValue("Name")
+	message.Message = request.FormValue("Message")
+}
+
+func main(){	
+	http.HandleFunc("/home", GetDataFromClient)
+	http.ListenAndServe("127.0.0.1:8069", nil)
 }
