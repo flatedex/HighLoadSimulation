@@ -32,8 +32,8 @@ func GetDataFromClient(writer http.ResponseWriter, request *http.Request){
 	message.Message = request.FormValue("Message")
 }
 
-func main(){	
-	conn, err := amqp.Dial("amqp://guest:guest@localhost/")
+func main() {	
+	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
 	FailOnError(err, "Failed to connect to RabbitMQ")
 
 	defer conn.Close()
@@ -44,7 +44,7 @@ func main(){
 	defer ch.Close()
 
 	q, err := ch.QueueDeclare(
-		"myChannel",
+		"myQueue",
 		false,
 		false,
 		false,
@@ -68,7 +68,7 @@ func main(){
 
 	go func(){
 		for d := range msg {
-			fmt.Println("Recieved a message: %s", d.Body)
+			fmt.Printf("Recieved a message: %s\n", d.Body)
 		}
 	}()
 
