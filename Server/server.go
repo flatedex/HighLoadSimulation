@@ -1,13 +1,23 @@
 package main
 
 import (
-	_ "fmt"
+	"fmt"
 	"net/http"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
+
+const PORT = 8000
 
 type Message struct {
 	Name string
 	Message string
+}
+
+func FailOnError(err error, msg string){
+	if(err != nil) { 
+		fmt.Println(msg)
+		panic(err)
+	}
 }
 
 func GetDataFromClient(writer http.ResponseWriter, request *http.Request){
@@ -23,6 +33,45 @@ func GetDataFromClient(writer http.ResponseWriter, request *http.Request){
 }
 
 func main(){	
-	http.HandleFunc("/home", GetDataFromClient)
-	http.ListenAndServe("127.0.0.1:8069", nil)
+	conn, err := amqp.Dial("amqp://guest:guest@localhost/")
+	FailOnError(err, "Failed to connect to RabbitMQ")
+
+	defer conn.Close()
+
+	ch, err := conn.Channel()
+	FailOnError(err, "Failed to connect to a channel")
+
+	defer ch.Close()
+
+	q, err := ch.QueueDeclare(
+		"myChannel",
+		false,
+		false,
+		false,
+		false,
+		nil,
+	)
+	FailOnError(err, "Failed to declare a queue")
+
+	msg, err := ch.Consume(
+		q.Name,
+		"",
+		true,
+		false,
+		false,
+		false,
+		nil,
+	)
+	FailOnError(err, "Failed to register a consumer")
+
+	var forever chan struct{}
+
+	go func(){
+		for d := range msg {
+			fmt.Println("Recieved a message: %s", d.Body)
+		}
+	}()
+
+	fmt.Println("Recieving messages, to exit press [Ctrl+C]")
+	<- forever
 }
