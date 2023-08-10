@@ -1,6 +1,7 @@
 <!DOCTYPE html>
+
 <head>
-     <style>
+    <style>
         :root {
             --main-color: #9eaec4;
             --main-color-trans: rgba(158, 174, 196, 0.5);
@@ -18,6 +19,7 @@
             align-items: center;
             height: 100vh;
         }
+
         .form-message-container {
             width: 50%;
             max-width: 400px;
@@ -65,10 +67,11 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="form-message-container">
-            <form type="post" action="/" enctype="application/x-www-form-urlencoded">
+            <form method="post" action="/" enctype="application/x-www-form-urlencoded">
                 <div class="block">
                     <label>Enter your name</label>
                     <input type="text" name="Name" required />

@@ -13,7 +13,7 @@ const app = express();
 var amqp = require('amqplib/callback_api');
 
 app.set('view engine', 'ejs');
-app.set('views', 'C:\\GoProjects\\HighLoad\\Client\\views');
+app.set('views', './views');
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
