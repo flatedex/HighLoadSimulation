@@ -6,7 +6,7 @@ const bodyParser = require('body-parser');
 const router = express.Router();
 
 const PORT = 8050;
-const HOST = "127.0.0.1";
+const HOST = "0.0.0.0";
 
 const app = express();
 

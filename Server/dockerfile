@@ -1,10 +1,12 @@
 FROM node:18
 
-COPY package*.json ./Server/
+WORKDIR /Server
 
-WORKDIR /Server/
+COPY package*.json .
 
 RUN npm install
+
+COPY . .
 
 EXPOSE 8050
 
