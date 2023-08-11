@@ -1,0 +1,11 @@
+FROM node:18
+
+COPY package*.json ./Server/
+
+WORKDIR /Server/
+
+RUN npm install
+
+EXPOSE 8050
+
+CMD [ "node", "server.js" ]
