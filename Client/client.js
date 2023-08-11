@@ -43,6 +43,7 @@ app.post('/', (req, res) => {
             console.log(`Message by ${name} sent`);
         });
     });
+    res.render("index");
 });
 
 app.listen(PORT, HOST, () => {
