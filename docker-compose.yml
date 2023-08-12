@@ -1,0 +1,30 @@
+version: '1'
+
+services:
+  server:
+    build: Server/
+    ports: 
+      - 8050:8050
+    networks:
+      - serverToRabbit
+    depends_on:
+      - rabbitmq
+
+  highloadService:
+    build: HighloadService/
+    command: go run server.go
+    depends_on:
+      - rabbimq
+    networks:
+      - rabbitToService
+  
+  rabbimq:
+    hostname: rabbitmq
+    image: rabbitmq
+    ports:
+    - 15672:15672
+    - 5672:5672
+    networks:
+      - serverToRabbit
+      - rabbitToService
+    
