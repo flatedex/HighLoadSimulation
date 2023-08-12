@@ -24,7 +24,7 @@ app.post('/', (req, res) => {
     let name = req.body.Name;
     let message = req.body.Message;
 
-    amqp.connect('amqp://guest:guest@localhost:5672/', function(error, connection) {
+    amqp.connect('amqp://guest:guest@rabbitmq:5672/', function(error, connection) {
         if(error) {
             throw error;
         }
