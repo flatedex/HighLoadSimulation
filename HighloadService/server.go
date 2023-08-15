@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"net/http"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
@@ -18,18 +17,6 @@ func FailOnError(err error, msg string){
 		fmt.Println(msg)
 		panic(err)
 	}
-}
-
-func GetDataFromClient(writer http.ResponseWriter, request *http.Request){
-	defer writer.Write([]byte(http.StatusText(200)))
-
-	err := request.ParseForm()
-	if(err != nil) { panic(err) }
-
-	var message Message
-
-	message.Name = request.FormValue("Name")
-	message.Message = request.FormValue("Message")
 }
 
 func main() {	
