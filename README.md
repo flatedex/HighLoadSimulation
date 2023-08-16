@@ -14,3 +14,6 @@ Soluiton to this problem might be way to use web-sockets to inform client that s
 This project uses **microsevice architecture** and **RabbitMQ** as message broker, **Rabbit** provides communication between services with it's internal queues and distribution.
 
 Server provides communication between client and services and this supposed to be it's **only** role. 
+
+### Startup
+To run this you will need Docker installed, then run docker compose file and finally get access from localhost:8050
