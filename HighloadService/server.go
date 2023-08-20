@@ -3,13 +3,16 @@ package main
 import (
 	"fmt"
 	amqp "github.com/rabbitmq/amqp091-go"
+	"encoding/json"
+	"math/rand"
+	"strconv"
 )
 
 const PORT = 8000
 
-type Message struct {
+type User struct {
 	Name string
-	Message string
+	Password string
 }
 
 func FailOnError(err error, msg string){
@@ -30,9 +33,19 @@ func main() {
 
 	defer ch.Close()
 
-	q, err := ch.QueueDeclare(
-		"myQueue",
+	codeGeneratorQueue, err := ch.QueueDeclare(
+		"codeGenerator",
+		true,
 		false,
+		false,
+		false,
+		nil,
+	)
+	FailOnError(err, "Failed to declare a queue")
+
+	codeSenderQueue, err := ch.QueueDeclare(
+		"codeSender",
+		true,
 		false,
 		false,
 		false,
@@ -41,7 +54,7 @@ func main() {
 	FailOnError(err, "Failed to declare a queue")
 
 	msg, err := ch.Consume(
-		q.Name,
+		codeGeneratorQueue.Name,
 		"",
 		true,
 		false,
@@ -56,6 +69,21 @@ func main() {
 	go func(){
 		for d := range msg {
 			fmt.Printf("Recieved a message: %s\n", d.Body)
+			user := User{}
+			err = json.Unmarshal([]byte(d.Body), &user)
+			FailOnError(err, "Failed to convert object into JSON")
+
+			code := int(rand.Float64() * 100000)
+			message := strconv.Itoa(code)
+
+			err = ch.Publish(
+				"",
+				codeSenderQueue.Name,
+				false,
+				false,
+				amqp.Publishing{Body: []byte(message)},
+			)
+			FailOnError(err, "Failed to send message to codeSender")
 		}
 	}()
 

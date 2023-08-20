@@ -21,7 +21,7 @@ services:
       rabbitmq:
         condition: service_healthy
     networks:
-      - rabbit-to-service
+      - rabbit-to-generator
     volumes:
       - /highloadservice:/highloadservice
   
@@ -33,16 +33,16 @@ services:
     - 5672:5672
     networks:
       - server-to-rabbit
-      - rabbit-to-service
+      - rabbit-to-generator
     healthcheck:
       test: rabbitmq-diagnostics check_running || exit 1
-      interval: 5s
+      interval: 3s
       timeout: 1s
-      retries: 3
-      start_period: 5s
+      retries: 10
+      start_period: 10s
 
 networks:
   server-to-rabbit:
     driver: bridge
-  rabbit-to-service:
+  rabbit-to-generator:
     driver: bridge 

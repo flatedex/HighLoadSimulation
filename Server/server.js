@@ -10,7 +10,7 @@ const HOST = "0.0.0.0";
 
 const app = express();
 
-var amqp = require('amqplib/callback_api');
+var amqp = require('amqplib');
 
 app.set('view engine', 'ejs');
 app.set('views', './views');
@@ -20,30 +20,35 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.get('/', (req, res) => {
     res.render("index");
 });
-app.post('/', (req, res) => {
-    let name = req.body.Name;
-    let message = req.body.Message;
+app.post('/', async (req, res) => {
+    let name = req.body.name;
+    let password = req.body.password;
 
-    amqp.connect('amqp://guest:guest@rabbitmq:5672/', function(error, connection) {
-        if(error) {
-            throw error;
-        }
-        connection.createChannel(function(error1, channel){
-            if(error1){
-                throw error;
-            }
-            let queue = "myQueue";
-            let msg = message;
+    let connection = await amqp.connect('amqp://guest:guest@rabbitmq:5672/'); 
+    
+    let channel = await connection.createChannel();
+         
+    let queue = "codeGenerator";
 
-            channel.assertQueue(queue, {
-                durable: false
-            });
+    let user = {
+        name: name,
+        password: password,
+    };
 
-            channel.sendToQueue(queue, Buffer.from(msg));
-            console.log(`Message by ${name} sent`);
-        });
+    let msg = JSON.stringify(user);
+
+    await channel.assertQueue(queue, {
+        durable: true
     });
+
+    channel.sendToQueue(queue, Buffer.from(msg));
+    console.log(`Message by ${name} sent`);
     res.render("index");
+});
+
+app.post('/confirm', async (req, res) => {
+    let name = req.body.code;
+
 });
 
 app.listen(PORT, HOST, () => {
