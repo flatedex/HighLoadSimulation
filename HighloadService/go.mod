@@ -1,4 +1,4 @@
-module Server
+module HighLoadService
 
 go 1.20
 
