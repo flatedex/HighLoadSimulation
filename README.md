@@ -16,4 +16,4 @@ This project uses **microsevice architecture** and **RabbitMQ** as message broke
 Server provides communication between client and services and this supposed to be it's **only** role. 
 
 ### Startup
-To run this you will need Docker installed, then run docker compose file and finally get access from localhost:8050
+To run this you will need [Docker] installed, then run **docker-compose up -d** and finally get access from localhost:8050
