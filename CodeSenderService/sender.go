@@ -36,7 +36,7 @@ func main() {
 	msg, err := ch.Consume(
 		codeSenderQueue.Name,
 		"",
-		true,
+		false,
 		false,
 		false,
 		false,
@@ -49,6 +49,7 @@ func main() {
 	go func(){
 		for d := range msg {
 			fmt.Printf("Recieved a message from codeGenerator: %s\n", d.Body)
+			// send message to telegram api here
 		}
 	}()
 
