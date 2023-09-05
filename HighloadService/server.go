@@ -1,16 +1,19 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"encoding/json"
 	"math/rand"
 	"strconv"
+	"time"
 )
 
 type User struct {
 	Name string
 	Password string
+	Code int
 }
 
 func FailOnError(err error, msg string){
@@ -39,7 +42,7 @@ func main() {
 		false,
 		nil,
 	)
-	FailOnError(err, "Failed to declare a queue")
+	FailOnError(err, "Failed to declare a queue: codeGenerator")
 
 	codeSenderQueue, err := ch.QueueDeclare(
 		"codeSender",
@@ -49,18 +52,32 @@ func main() {
 		false,
 		nil,
 	)
-	FailOnError(err, "Failed to declare a queue")
+	FailOnError(err, "Failed to declare a queue: codeSender")
 
-	msg, err := ch.Consume(
-		codeGeneratorQueue.Name,
-		"",
+	authQueue, err := ch.QueueDeclare(
+		"auth",
 		true,
 		false,
 		false,
 		false,
 		nil,
 	)
-	FailOnError(err, "Failed to register a consumer")
+	FailOnError(err, "Failed to declare a queue: auth")
+
+	msg, err := ch.Consume(
+		codeGeneratorQueue.Name,
+		"",
+		false,
+		false,
+		false,
+		false,
+		nil,
+	)
+	FailOnError(err, "Failed to register a consumer: codeGenerator")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+
+	defer cancel()
 
 	var forever chan struct{}
 
@@ -69,12 +86,13 @@ func main() {
 			fmt.Printf("Recieved a message: %s\n", d.Body)
 			user := User{}
 			err = json.Unmarshal([]byte(d.Body), &user)
-			FailOnError(err, "Failed to convert object into JSON")
+			FailOnError(err, "Failed to convert JSON into object of user")
 
-			code := int(rand.Float64() * 100000)
-			message := strconv.Itoa(code)
+			user.Code = int(rand.Float64() * 100000)
+			message := strconv.Itoa(user.Code)
 
-			err = ch.Publish(
+			err = ch.PublishWithContext(
+				ctx,
 				"",
 				codeSenderQueue.Name,
 				false,
@@ -82,6 +100,20 @@ func main() {
 				amqp.Publishing{Body: []byte(message)},
 			)
 			FailOnError(err, "Failed to send message to codeSender")
+
+			
+			messageToAuth, err := json.Marshal(user)
+			FailOnError(err, "Failed to create JSON from user")
+			
+			err = ch.PublishWithContext(
+				ctx,
+				"",
+				authQueue.Name,
+				false,
+				false,
+				amqp.Publishing{Body: []byte(messageToAuth)},
+			)
+			FailOnError(err, "Failed to send message to auth")
 		}
 	}()
 
