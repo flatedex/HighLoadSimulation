@@ -3,23 +3,22 @@ version: '1'
 services:
 
   sender:
-    build: sender/
+    build: codesenderservice/
     command: go run sender.go
     depends_on:
-      - rabbitmq:
+      rabbitmq:
         condition: service_healthy
-      - postgres
     networks:
       - rabbit-to-sender
 
   auth:
-    build: auth/
+    build: authservice/
     command: go run auth.go
     depends_on:
       rabbitmq:
         condition: service_healthy
     networks:
-      - auth-to-generator
+      - auth-to-rabbit
 
   server:
     build: server/
@@ -64,6 +63,9 @@ services:
       timeout: 1s
       retries: 10
       start_period: 10s
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   postgres:
     hostname: postgres
