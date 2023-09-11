@@ -1,6 +1,26 @@
 version: '1'
 
 services:
+
+  sender:
+    build: sender/
+    command: go run sender.go
+    depends_on:
+      - rabbitmq:
+        condition: service_healthy
+      - postgres
+    networks:
+      - rabbit-to-sender
+
+  auth:
+    build: auth/
+    command: go run auth.go
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - auth-to-generator
+
   server:
     build: server/
     ports: 
@@ -14,26 +34,30 @@ services:
     volumes:
       - /server:/server
 
-  highload-service:
-    build: highloadservice/
-    command: go run server.go
+  generator:
+    build: codeworkerservice/
+    command: go run code.go
     depends_on:
       rabbitmq:
         condition: service_healthy
     networks:
       - rabbit-to-generator
     volumes:
-      - /highloadservice:/highloadservice
+      - /codeworkerservice:/codeworkerservice
   
   rabbitmq:
     hostname: rabbitmq
     image: rabbitmq
     ports:
-    - 15672:15672
-    - 5672:5672
+      - 15672:15672
+      - 5672:5672
     networks:
       - server-to-rabbit
       - rabbit-to-generator
+      - rabbit-to-sender
+      - auth-to-rabbit
+      - rabbit-to-auth
+      - generator-to-rabbit
     healthcheck:
       test: rabbitmq-diagnostics check_running || exit 1
       interval: 3s
@@ -41,8 +65,37 @@ services:
       retries: 10
       start_period: 10s
 
+  postgres:
+    hostname: postgres
+    image: postgres
+    ports: 
+      - 5432:5432
+    networks:
+      - postgres-network
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+      - PGUSER=postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready", "-d", "db_prod"]
+      interval: 30s
+      timeout: 60s
+      retries: 5
+      start_period: 80s  
+
 networks:
+  postgres-network:
+    driver: bridge
   server-to-rabbit:
     driver: bridge
   rabbit-to-generator:
     driver: bridge 
+  generator-to-rabbit:
+    driver: bridge
+  rabbit-to-auth:
+    driver: bridge
+  auth-to-rabbit:
+    driver: bridge
+  rabbit-to-sender:
+    driver: bridge
