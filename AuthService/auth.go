@@ -53,7 +53,7 @@ func main(){
 
 	go func(){
 		for d := range msg {
-			fmt.Printf("Recieved a message from auth: %s\n", d.Body)
+			fmt.Printf("Recieved a message from authQueue: %s\n", d.Body)
 			// authenticate user here
 		}
 	}()
